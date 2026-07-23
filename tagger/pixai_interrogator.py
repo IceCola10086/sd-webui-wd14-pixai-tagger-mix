@@ -122,35 +122,38 @@ class PixAIInterrogator(Interrogator):
         confidents_raw = 1 / (1 + np.exp(-logits.astype(np.float64)))
 
         chars_map, ips_map, general_map = {}, {}, {}
+        chars_ips = {}
         t_names = self.tags['name'].values
         t_cats = self.tags['category'].values
         t_ips = self.tags['ips'].values
 
-        # 遍历并分类提取
         for i in range(len(confidents_raw)):
             prob = float(confidents_raw[i])
 
-            # 此处仅进行极其微小的物理预过滤（0.001），防止性能浪费
             if prob < 0.001: continue
 
             cat = t_cats[i]
             name = t_names[i]
 
-            if cat == 4: # Character
+            if cat == 4:
                 chars_map[name] = prob
-                if t_ips[i] != '[]':
-                    try:
-                        for ip in ast.literal_eval(t_ips[i]):
-                            ips_map[ip] = max(ips_map.get(ip, 0), prob)
-                    except: pass
-            elif cat == 0: # General
+                chars_ips[name] = t_ips[i]
+            elif cat == 0:
                 general_map[name] = prob
 
-        # 组内置信度降序排序工具（不再限制数量）
+        if chars_map:
+            best_char = max(chars_map, key=chars_map.get)
+            best_ips_raw = chars_ips[best_char]
+            if best_ips_raw != '[]':
+                try:
+                    for ip in ast.literal_eval(best_ips_raw):
+                        ips_map[ip] = chars_map[best_char]
+                except:
+                    pass
+
         def sort_group(d):
             return dict(sorted(d.items(), key=lambda x: x[1], reverse=True))
 
-        # 合并结果：Character -> IP -> General
         combined_results = {}
         combined_results.update(sort_group(chars_map))
         combined_results.update(sort_group(ips_map))
