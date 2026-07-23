@@ -66,7 +66,7 @@ def on_interrogate(
 
     # single process
     if image is not None:
-        ratings, tags = interrogator.interrogate(image)
+        ratings, tags = interrogator.interrogate(image, threshold)
         processed_tags = Interrogator.postprocess_tags(
             tags,
             *postprocess_opts
@@ -160,7 +160,7 @@ def on_interrogate(
                     print(f'skipping {path}')
                     continue
 
-            ratings, tags = interrogator.interrogate(image)
+            ratings, tags = interrogator.interrogate(image, threshold)
             processed_tags = Interrogator.postprocess_tags(
                 tags,
                 *postprocess_opts

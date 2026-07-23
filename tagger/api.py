@@ -69,7 +69,7 @@ class Api:
         interrogator = utils.interrogators[req.model]
 
         with self.queue_lock:
-            ratings, tags = interrogator.interrogate(image)
+            ratings, tags = interrogator.interrogate(image, req.threshold)
 
         return models.TaggerInterrogateResponse(
             caption={

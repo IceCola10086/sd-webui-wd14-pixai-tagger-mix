@@ -100,7 +100,7 @@ class PixAIInterrogator(Interrogator):
         t_path = Path(hf_hub_download(**self.kwargs, filename=self.tags_path))
         return m_path, t_path
 
-    def interrogate(self, image: Image) -> Tuple[Dict[str, float], Dict[str, float]]:
+    def interrogate(self, image: Image, threshold=0.35) -> Tuple[Dict[str, float], Dict[str, float]]:
         if not hasattr(self, 'model') or self.model is None:
             self.load()
 
@@ -130,15 +130,15 @@ class PixAIInterrogator(Interrogator):
         for i in range(len(confidents_raw)):
             prob = float(confidents_raw[i])
 
-            if prob < 0.001: continue
+            if prob < 0.1: continue
 
             cat = t_cats[i]
             name = t_names[i]
 
-            if cat == 4:
+            if cat == 4 and prob > 0.8:
                 chars_map[name] = prob
                 chars_ips[name] = t_ips[i]
-            elif cat == 0:
+            elif cat == 0 and prob >= threshold:
                 general_map[name] = prob
 
         if chars_map:
